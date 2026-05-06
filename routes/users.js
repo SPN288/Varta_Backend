@@ -39,14 +39,22 @@ router.get('/profile', protect, async (req, res) => {
   }
 });
 
-// Update profile photo
-router.patch('/profile/photo', protect, async (req, res) => {
+const bcrypt = require('bcryptjs');
+
+// Update profile photo -> Update profile details
+router.patch('/profile', protect, async (req, res) => {
   try {
-    const { profilePhoto } = req.body;
+    const { profilePhoto, username, password } = req.body;
     const user = await User.findById(req.user._id);
 
     if (user) {
-      user.profilePhoto = profilePhoto || user.profilePhoto;
+      if (profilePhoto !== undefined) user.profilePhoto = profilePhoto;
+      if (username) user.username = username;
+      if (password) {
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(password, salt);
+      }
+
       await user.save();
       res.json({
         _id: user._id,
@@ -59,7 +67,7 @@ router.patch('/profile/photo', protect, async (req, res) => {
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Server Error updating photo' });
+    res.status(500).json({ message: 'Server Error updating profile' });
   }
 });
 
