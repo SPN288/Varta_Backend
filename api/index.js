@@ -25,6 +25,9 @@ const io = new Server(httpServer, {
   }
 });
 
+// Make io accessible from routes for server-side message broadcasting
+app.set('io', io);
+
 // Middleware
 app.use(cors());
 // Increase limit for base64 strings

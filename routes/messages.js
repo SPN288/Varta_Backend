@@ -53,6 +53,16 @@ router.post('/', protect, async (req, res) => {
       lastMessage: message._id,
     });
 
+    // Server-side socket broadcast for reliable real-time delivery
+    const io = req.app.get('io');
+    if (io && message.conversationId && message.conversationId.participants) {
+      message.conversationId.participants.forEach((participant) => {
+        // Don't send back to the sender (they already have it optimistically)
+        if (participant._id.toString() === req.user._id.toString()) return;
+        io.in(participant._id.toString()).emit('message recieved', message);
+      });
+    }
+
     res.json(message);
   } catch (error) {
     console.error(error);
