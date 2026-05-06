@@ -40,8 +40,14 @@ router.post('/', protect, async (req, res) => {
   try {
     let message = await Message.create(newMessage);
 
-    message = await message.populate('senderId', 'username profilePhoto');
-    message = await message.populate('conversationId');
+    message = await message.populate('senderId', 'username profilePhoto email');
+    message = await message.populate({
+      path: 'conversationId',
+      populate: {
+        path: 'participants',
+        select: 'username profilePhoto email',
+      },
+    });
 
     await Conversation.findByIdAndUpdate(conversationId, {
       lastMessage: message._id,
