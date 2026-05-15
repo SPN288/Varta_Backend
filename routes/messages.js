@@ -7,7 +7,11 @@ const { protect } = require('../middleware/authMiddleware');
 // Get all messages for a conversation
 router.get('/:conversationId', protect, async (req, res) => {
   try {
-    const messages = await Message.find({ conversationId: req.params.conversationId })
+    let query = { conversationId: req.params.conversationId };
+    if (req.query.after) {
+      query.createdAt = { $gt: new Date(req.query.after) };
+    }
+    const messages = await Message.find(query)
       .populate('senderId', 'username profilePhoto email')
       .populate('conversationId');
 
