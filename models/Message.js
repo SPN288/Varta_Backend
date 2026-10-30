@@ -32,8 +32,18 @@ const messageSchema = new mongoose.Schema(
     duration: {
       type: String, // e.g., "1:00" for voice messages
     },
+    clientId: {
+      type: String, // Client-generated id, makes send retries idempotent
+    },
   },
   { timestamps: true }
+);
+
+// Chat history is always read per conversation, ordered by time
+messageSchema.index({ conversationId: 1, createdAt: -1 });
+messageSchema.index(
+  { senderId: 1, clientId: 1 },
+  { unique: true, partialFilterExpression: { clientId: { $type: 'string' } } }
 );
 
 module.exports = mongoose.model('Message', messageSchema);
